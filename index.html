@@ -38,6 +38,22 @@
             <input type="radio" id="java25" name="javaVersion" value="25">
             <label for="java25">Java 25</label>
         </fieldset>
+
+        <fieldset>
+            <legend>Architecture</legend>
+
+            <input type="radio" id="fatcontroller" name="architecture" value="fatcontroller" checked>
+            <label for="fatcontroller">Fat Controller</label>
+
+            <input type="radio" id="controllerServiceDao" name="architecture" value="controllerServiceDao">
+            <label for="controllerServiceDao">Controller + Service + DAO</label>
+
+            <input type="radio" id="controllerServiceMapper" name="architecture" value="controllerServiceMapper">
+            <label for="controllerServiceMapper">Controller + Service + Mapper (Using MyBatis)</label>
+
+            <input type="radio" id="controllerServiceRepository" name="architecture" value="controllerServiceRepository">
+            <label for="controllerServiceRepository">Controller + Service + Repository (Using JPA)</label>
+        </fieldset>
         
         <button onclick="generateProject()">생성하기</button>
 
@@ -50,6 +66,7 @@
                 const javaVersion = document.querySelector("[name='javaVersion']:checked").value;
                 const description = document.getElementById("description").value;
                 const test = document.querySelector("[name='test']:checked").value;
+                const architecture = document.querySelector("[name='architecture']:checked").value;
 
                 const zip = new JSZip();
                 const packageName = groupName + "." + projectName;
@@ -68,6 +85,22 @@
                 // 테스트 코드 폴더 생성
                 if (test === "use") {
                     projectFolder.folder(`src/test/java/${packagePath}`);
+                }
+
+                if (architecture === "fatcontroller") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                } else if (architecture === "controllerServiceDao") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/dao`);
+                } else if (architecture === "controllerServiceMapper") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/mapper`);
+                } else if (architecture === "controllerServiceRepository") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/repository`);
                 }
 
                 // build.gradle 파일 추가
@@ -110,7 +143,7 @@
                 applicationJavaContent += `        SpringApplication.run(${applicationClassName}.class, args);\n`
                 applicationJavaContent += `    }\n`
                 applicationJavaContent += `}`;
-                
+
                 projectFolder.file(`src/main/java/${packagePath}/${applicationClassName}.java`, applicationJavaContent);
 
                 // 압축 파일 생성 및 다운로드
