@@ -1,5 +1,44 @@
 <!DOCTYPE html>
 <html>
+    <style>
+        body {
+            background-color: #e8eef7;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        th {
+            padding: 12px 16px;
+            background-color: #f5f6fa;
+            border: 1px solid #eef1f8;
+            font-weight: 400;
+            font-size: 16px;
+            color: #abb0bf;
+            text-align: left;
+        }
+        th:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        th:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        td {
+            padding: 12px 16px;
+            background-color: #fff;
+            border: 1px solid #e5ebf4;
+        }
+        td:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        td:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+    </style>
     <body>
         <article>
             <h4>Team Name</h4>
@@ -15,12 +54,120 @@
             <h4>Description</h4>
             <input type="text" id="description" name="description" value="Spring Boot project">
         </article>
+
+        <article>
+            <h4>Table</h4>
+            <input type="text" id="tableName" name="tableName" value="user">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Length</th>
+                        <th>Default</th>
+                        <th>PK</th>
+                        <th>Nullable</th>
+                        <th>Increment</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr class="columnRow1">
+                        <td>
+                            <input type="text" name="columnName" value="id">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR">VARCHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="DATETIME">DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="20">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK" checked>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement" checked>
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(1)">Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button id="columnAddButton">Add Column</button>
+        </article>
         
-        <button onclick="generateProject()">생성하기</button>
+        <button onclick="generateProject()" style="background-color: #5b7cfd;">생성하기</button>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
         <script>
+            const columnAddButton = document.getElementById("columnAddButton");
+            columnAddButton.addEventListener("click", function() {
+                const tbody = document.querySelector("table tbody");
+                const newRow = document.createElement("tr");
+
+                const rowId = Date.now();
+                newRow.classList.add(`columnRow${rowId}`);
+                newRow.innerHTML = `
+                <td>
+                    <input type="text" name="columnName" value="id">
+                </td>
+                <td>
+                    <select>
+                        <option value="BIGINT">BIGINT</option>
+                        <option value="INT">INT</option>
+                        <option value="VARCHAR">VARCHAR</option>
+                        <option value="TEXT">TEXT</option>
+                        <option value="DATETIME">DATETIME</option>
+                        <option value="DATE">DATE</option>
+                        <option value="BOOLEAN">BOOLEAN</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="columnLength" value="20">
+                </td>
+                <td>
+                    <input type="text" name="columnDefault" value="">
+                </td>
+                <td>
+                    <input type="checkbox" name="columnPK" checked>
+                </td>
+                <td>
+                    <input type="checkbox" name="columnNullable">
+                </td>
+                <td>
+                    <input type="checkbox" name="columnIncrement" checked>
+                </td>
+                <td>
+                    <button onclick="removeRow(${rowId})">Remove</button>
+                </td>`;
+                tbody.appendChild(newRow);
+            });
+
+            function removeRow(rowNumber) {
+                const row = document.querySelector(`.columnRow${rowNumber}`);
+                if (row) {
+                    row.remove();
+                }
+            }
+            
             async function generateProject() {
                 const teamName = document.getElementById("teamName").value;
                 const projectName = document.getElementById("projectName").value;
@@ -33,40 +180,39 @@
 
                 // 최상위 폴더 생성
                 const projectFolder = zip.folder(projectName);
-                
-                // gradle 폴더 생성
-                projectFolder.folder(`gradle/wrapper`);
-
-                // src 폴더 생성
-                projectFolder.folder(`src/main/java/${packagePath}`);
-                projectFolder.folder(`src/main/resources`);
-
-                projectFolder.folder(`src/main/java/${packagePath}/controller`);
 
                 // build.gradle 파일 추가
                 projectFolder.file("build.gradle", getBuildGradleContent(groupName, description, 17));
-
-                // application.properties 파일 추가
-                projectFolder.file("src/main/resources/application.properties", `spring.application.name=${projectName}`);
-
                 // settings.gradle 파일 추가
                 projectFolder.file("settings.gradle", getSettingsGradleContent(projectName));
-
                 // README.md 파일 추가
                 projectFolder.file("README.md", getReadMeContent(projectName, description));
-
+                // gradlew 파일 추가
+                projectFolder.file("gradlew", readFile("./assets/gradlew"));
+                // gradlew.bat 파일 추가
+                projectFolder.file("gradlew.bat", readFile("./assets/gradlew.bat"));
+                
+                // gradle 폴더 생성
+                projectFolder.folder(`gradle/wrapper`);
                 // gradle 관련 파일 추가
                 projectFolder.file("gradle/wrapper/gradle-wrapper.jar", readFile("./assets/gradle-wrapper.jar"));
                 projectFolder.file("gradle/wrapper/gradle-wrapper.properties", readFile("./assets/gradle-wrapper.properties"));
-                projectFolder.file("gradlew", readFile("./assets/gradlew"));
-                projectFolder.file("gradlew.bat", readFile("./assets/gradlew.bat"));
 
+                // resources 폴더 생성
+                projectFolder.folder(`src/main/resources`);
+                // application.properties 파일 추가
+                projectFolder.file("src/main/resources/application.properties", `spring.application.name=${projectName}`);
+
+                projectFolder.folder(`src/main/java/${packagePath}`);
                 // Application.java 파일 추가
                 const applicationClassName = projectName.charAt(0).toUpperCase() + projectName.slice(1) + "Application";
                 projectFolder.file(`src/main/java/${packagePath}/${applicationClassName}.java`, getApplicationJavaContent(applicationClassName, packageName));
 
+                projectFolder.folder(`src/main/java/${packagePath}/controller`);
                 const controllerClassName = projectName.charAt(0).toUpperCase() + projectName.slice(1) + "Controller";
                 projectFolder.file(`src/main/java/${packagePath}/controller/${controllerClassName}.java`, getControllerContent(controllerClassName, packageName));
+
+                projectFolder.folder(`src/main/java/${packagePath}/dto`);
 
                 // 압축 파일 생성 및 다운로드
                 const content = await zip.generateAsync({ type: "blob" });
