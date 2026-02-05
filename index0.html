@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <fieldset>
+            <legend>Group Name</legend>
+            <input type="text" id="groupName" name="groupName" value="com.example">
+        </fieldset>
+
+        <fieldset>
+            <legend>Project Name</legend>
+            <input type="text" id="projectName" name="projectName" value="springboot-project">
+        </fieldset>
+
+        <fieldset>
+            <legend>Description</legend>
+            <input type="text" id="description" name="description" value="Spring Boot project">
+        </fieldset>
+
+        <fieldset>
+            <legend>Test Code</legend>
+
+            <input type="radio" id="testUse" name="test" value="use" checked>
+            <label for="testUse">Use</label>
+
+            <input type="radio" id="testUnuse" name="test" value="unuse">
+            <label for="testUnuse">Unuse</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Java version</legend>
+            
+            <input type="radio" id="java17" name="javaVersion" value="17" checked>
+            <label for="java17">Java 17</label>
+
+            <input type="radio" id="java21" name="javaVersion" value="21">
+            <label for="java21">Java 21</label>
+
+            <input type="radio" id="java25" name="javaVersion" value="25">
+            <label for="java25">Java 25</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Architecture</legend>
+
+            <input type="radio" id="fatcontroller" name="architecture" value="fatcontroller" checked>
+            <label for="fatcontroller">Fat Controller</label>
+
+            <input type="radio" id="controllerServiceDao" name="architecture" value="controllerServiceDao">
+            <label for="controllerServiceDao">Controller + Service + DAO</label>
+
+            <input type="radio" id="controllerServiceMapper" name="architecture" value="controllerServiceMapper">
+            <label for="controllerServiceMapper">Controller + Service + Mapper (Using MyBatis)</label>
+
+            <input type="radio" id="controllerServiceRepository" name="architecture" value="controllerServiceRepository">
+            <label for="controllerServiceRepository">Controller + Service + Repository (Using JPA)</label>
+        </fieldset>
+        
+        <button onclick="generateProject()">생성하기</button>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+        <script>
+            async function generateProject() {
+                const groupName = document.getElementById("groupName").value;
+                const projectName = document.getElementById("projectName").value;
+                const javaVersion = document.querySelector("[name='javaVersion']:checked").value;
+                const description = document.getElementById("description").value;
+                const test = document.querySelector("[name='test']:checked").value;
+                const architecture = document.querySelector("[name='architecture']:checked").value;
+
+                const zip = new JSZip();
+                const packageName = groupName + "." + projectName;
+                const packagePath = packageName.replace(/\./g, '/');
+
+                // 최상위 폴더 생성
+                const projectFolder = zip.folder(projectName);
+                
+                // gradle 폴더 생성
+                projectFolder.folder(`gradle/wrapper`);
+
+                // src 폴더 생성
+                projectFolder.folder(`src/main/java/${packagePath}`);
+                projectFolder.folder(`src/main/resources`);
+
+                // 테스트 코드 폴더 생성
+                if (test === "use") {
+                    projectFolder.folder(`src/test/java/${packagePath}`);
+                }
+
+                if (architecture === "fatcontroller") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                } else if (architecture === "controllerServiceDao") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/dao`);
+                } else if (architecture === "controllerServiceMapper") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/mapper`);
+                } else if (architecture === "controllerServiceRepository") {
+                    projectFolder.folder(`src/main/java/${packagePath}/controller`);
+                    projectFolder.folder(`src/main/java/${packagePath}/service`);
+                    projectFolder.folder(`src/main/java/${packagePath}/repository`);
+                }
+
+                // build.gradle 파일 추가
+                let buildGradleContent;
+                if (test === "use") {
+                    buildGradleContent = `plugins {\n    id 'java'\n    id 'org.springframework.boot' version '3.5.9'\n    id 'io.spring.dependency-management' version '1.1.7'\n}\n\ngroup = '${groupName}'\nversion = '0.0.1-SNAPSHOT'\ndescription = '${description}'\n\njava {\n    toolchain {\n        languageVersion = JavaLanguageVersion.of(${javaVersion})\n    }\n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    implementation 'org.springframework.boot:spring-boot-starter-web'\n    testImplementation 'org.springframework.boot:spring-boot-starter-test'\n    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'\n}\n\ntasks.named('test') {\n    useJUnitPlatform()\n}`;
+                } else {
+                    buildGradleContent = `plugins {\n    id 'java'\n    id 'org.springframework.boot' version '3.5.9'\n    id 'io.spring.dependency-management' version '1.1.7'\n}\n\ngroup = '${groupName}'\nversion = '0.0.1-SNAPSHOT'\ndescription = '${description}'\n\njava {\n    toolchain {\n        languageVersion = JavaLanguageVersion.of(${javaVersion})\n    }\n}\n\nrepositories {\n    mavenCentral()\n}\n\ndependencies {\n    implementation 'org.springframework.boot:spring-boot-starter-web'\n}`;
+                }
+                projectFolder.file("build.gradle", buildGradleContent);
+
+                // application.properties 파일 추가
+                projectFolder.file("src/main/resources/application.properties", `spring.application.name=${projectName}`);
+
+                // settings.gradle 파일 추가
+                const settingsGradleContent = `rootProject.name = '${projectName}'`;
+                projectFolder.file("settings.gradle", settingsGradleContent);
+
+                // README.md 파일 추가
+                const readmeContent = `# ${projectName}\n\n${description}\n`;
+                projectFolder.file("README.md", readmeContent);
+
+                // gradle 관련 파일 추가
+                projectFolder.file("gradle/wrapper/gradle-wrapper.jar", readFile("./assets/gradle-wrapper.jar"));
+                projectFolder.file("gradle/wrapper/gradle-wrapper.properties", readFile("./assets/gradle-wrapper.properties"));
+                projectFolder.file("gradlew", readFile("./assets/gradlew"));
+                projectFolder.file("gradlew.bat", readFile("./assets/gradlew.bat"));
+
+                // Application.java 파일 추가
+                const applicationClassName = projectName.charAt(0).toUpperCase() + projectName.slice(1) + "Application";
+                let applicationJavaContent = "";
+                applicationJavaContent += `package ${packageName};\n`
+                applicationJavaContent += `\n`
+                applicationJavaContent += `import org.springframework.boot.SpringApplication;\n`
+                applicationJavaContent += `import org.springframework.boot.autoconfigure.SpringBootApplication;\n`
+                applicationJavaContent += `\n`
+                applicationJavaContent += `@SpringBootApplication\n`
+                applicationJavaContent += `public class ${applicationClassName} {\n`
+                applicationJavaContent += `    public static void main(String[] args) {\n`
+                applicationJavaContent += `        SpringApplication.run(${applicationClassName}.class, args);\n`
+                applicationJavaContent += `    }\n`
+                applicationJavaContent += `}`;
+
+                projectFolder.file(`src/main/java/${packagePath}/${applicationClassName}.java`, applicationJavaContent);
+
+                // 압축 파일 생성 및 다운로드
+                const content = await zip.generateAsync({ type: "blob" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = `${projectName}.zip`;
+                link.click();
+            }
+            
+            async function readFile(filePath) {
+                try {
+                    const response = await fetch(filePath);
+                    if (!response.ok) {
+                        throw new Error('파일을 찾을 수 없습니다. 경로를 확인해주세요.');
+                    }
+
+                    return await response.arrayBuffer();
+                } catch (error) {
+                    console.error("❌ 오류 발생:", error);
+                    return null;
+                }
+            }
+        </script>
+    </body>
+</html>
