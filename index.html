@@ -40,20 +40,22 @@
         }
     </style>
     <body>
-        <article>
-            <h4>Team Name</h4>
-            <input type="text" id="teamName" name="teamName" value="coupang">
-        </article>
+        <section>
+            <article>
+                <h4>Team Name</h4>
+                <input type="text" id="teamName" name="teamName" value="coupang">
+            </article>
 
-        <article>
-            <h4>Project Name</h4>
-            <input type="text" id="projectName" name="projectName" value="springboot-project">
-        </article>
+            <article>
+                <h4>Project Name</h4>
+                <input type="text" id="projectName" name="projectName" value="springboot-project">
+            </article>
 
-        <article>
-            <h4>Description</h4>
-            <input type="text" id="description" name="description" value="Spring Boot project">
-        </article>
+            <article>
+                <h4>Description</h4>
+                <input type="text" id="description" name="description" value="Spring Boot project">
+            </article>
+        </section>
 
         <article>
             <h4>Table</h4>
@@ -112,12 +114,192 @@
             </table>
             <button id="columnAddButton">Add Column</button>
         </article>
-        
-        <button onclick="generateProject()" style="background-color: #5b7cfd;">생성하기</button>
+
+        <button id="generateBtn" style="background-color: #5b7cfd;">생성하기</button>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="./script/FileUtil.js"></script>
+        <script src="./script/GradleFileWriter.js"></script>
+        <script src="./script/SchemaFileWriter.js"></script>
+        <script>
+
+            async function generateProject() {
+                // const teamName = document.getElementById("teamName").value;
+                // const projectName = document.getElementById("projectName").value;
+                // const description = document.getElementById("description").value;
+                // const groupName = "com." + teamName;
+                const teamName = "ggomi";
+                const projectName = "playlist";
+                const description = "This is a playlist.";
+                
+                const groupName = "com." + teamName;
+
+                const zip = new JSZip();
+
+                // 최상위 폴더 생성
+                const projectFolder = zip.folder(projectName);
+
+                // gradle 파일 생성
+                createGradleFiles(projectFolder, {
+                    projectName: projectName,
+                    groupName: groupName,
+                    description: description,
+                    javaVersion: 17,
+                    useSwagger: true,
+                    useJDBC: true,
+                    useH2DB: true,
+                    usePostgreSQL: false
+                });
+
+                // 스키마 파일 생성
+                createSchemaFiles(projectFolder, {
+                        tableName: "PLAYLIST",
+                        columns: [
+                            {
+                                name: "ID",
+                                type: "BIGINT",
+                                length: "20",
+                                defaultValue: "",
+                                isPk: true,
+                                isNullable: false,
+                                isIncrement: true
+                            },
+                            {
+                                name: "GENRE",
+                                type: "VARCHAR",
+                                length: "50",
+                                defaultValue: "",
+                                isPk: false,
+                                isNullable: false,
+                                isIncrement: false
+                            },
+                            {
+                                name: "ARTIST",
+                                type: "VARCHAR",
+                                length: "100",
+                                defaultValue: "",
+                                isPk: false,
+                                isNullable: false,
+                                isIncrement: false
+                            },
+                            {
+                                name: "SONG_TITLE",
+                                type: "VARCHAR",
+                                length: "200",
+                                defaultValue: "",
+                                isPk: false,
+                                isNullable: true,
+                                isIncrement: false
+                            },
+                            {
+                                name: "IS_USED",
+                                type: "CHAR",
+                                length: "1",
+                                defaultValue: "Y",
+                                isPk: false,
+                                isNullable: false,
+                                isIncrement: false
+                            },
+                            {
+                                name: "CREATED_AT",
+                                type: "TIMESTAMP",
+                                length: null,
+                                defaultValue: "CURRENT_TIMESTAMP",
+                                isPk: false,
+                                isNullable: false,
+                                isIncrement: false
+                            },
+                            {
+                                name: "UPDATED_AT",
+                                type: "TIMESTAMP",
+                                length: null,
+                                defaultValue: "CURRENT_TIMESTAMP",
+                                isPk: false,
+                                isNullable: false,
+                                isIncrement: false
+                            }
+                        ]
+                    },
+                    "h2db"
+                );
+
+                // 압축 파일 생성 및 다운로드
+                FileUtil.download(zip, projectName);
+            }
+
+            document.getElementById("generateBtn").addEventListener("click", generateProject);
+        </script>
+        <!-- <script src="./script/gradleWriter.js"></script>
 
         <script>
+            function getTableDataAsJson() {
+                const tableName = document.getElementById("tableName").value;
+                const rows = document.querySelectorAll("table tbody tr");
+                const columns = [];
+
+                rows.forEach(row => {
+                    columns.push({
+                        name: row.querySelector('input[name="columnName"]').value,
+                        type: row.querySelector('select').value,
+                        length: row.querySelector('input[name="columnLength"]').value,
+                        defaultValue: row.querySelector('input[name="columnDefault"]').value,
+                        isPk: row.querySelector('input[name="columnPK"]').checked,
+                        isNullable: row.querySelector('input[name="columnNullable"]').checked,
+                        isIncrement: row.querySelector('input[name="columnIncrement"]').checked
+                    });
+                });
+
+                return {
+                    tableName: tableName,
+                    columns: columns
+                };
+            }
+            function generateCreateTableSql(schemaJson) {
+                let sql = `CREATE TABLE ${schemaJson.tableName} (\n`;
+                const columnDefinitions = [];
+                const pkColumns = []; // PK 컬럼 이름을 담을 배열
+
+                schemaJson.columns.forEach(col => {
+                    let line = `    ${col.name} ${col.type}`;
+                    
+                    // 길이 설정 (데이터 타입에 따라 선택적)
+                    if (col.length && ["VARCHAR", "INT", "BIGINT"].includes(col.type)) {
+                        line += `(${col.length})`;
+                    }
+
+                    // Auto Increment 처리 (H2 호환)
+                    if (col.isIncrement) line += " AUTO_INCREMENT";
+                    
+                    // Nullable 처리
+                    if (!col.isNullable) line += " NOT NULL";
+                    
+                    // 기본값 처리
+                    if (col.defaultValue) {
+                        const isNumeric = ["INT", "BIGINT", "BOOLEAN"].includes(col.type);
+                        line += ` DEFAULT ${isNumeric ? col.defaultValue : `'${col.defaultValue}'`}`;
+                    }
+
+                    // PK 리스트에 추가 (나중에 한꺼번에 처리)
+                    if (col.isPk) {
+                        pkColumns.push(col.name);
+                    }
+
+                    columnDefinitions.push(line);
+                });
+
+                // 모든 컬럼 정의 추가
+                sql += columnDefinitions.join(",\n");
+
+                // PK가 있을 경우 하단에 별도 선언
+                if (pkColumns.length > 0) {
+                    sql += `,\n    PRIMARY KEY (${pkColumns.join(", ")})`;
+                }
+
+                sql += "\n);";
+                
+                return sql;
+            }
+
             const columnAddButton = document.getElementById("columnAddButton");
             columnAddButton.addEventListener("click", function() {
                 const tbody = document.querySelector("table tbody");
@@ -181,22 +363,14 @@
                 // 최상위 폴더 생성
                 const projectFolder = zip.folder(projectName);
 
-                // build.gradle 파일 추가
-                projectFolder.file("build.gradle", getBuildGradleContent(groupName, description, 17));
-                // settings.gradle 파일 추가
-                projectFolder.file("settings.gradle", getSettingsGradleContent(projectName));
+                createGradleFiles(projectFolder, {
+                    projectName: projectName,
+                    groupName: groupName,
+                    description: description,
+                    javaVersion: 17
+                });
                 // README.md 파일 추가
                 projectFolder.file("README.md", getReadMeContent(projectName, description));
-                // gradlew 파일 추가
-                projectFolder.file("gradlew", readFile("./assets/gradlew"));
-                // gradlew.bat 파일 추가
-                projectFolder.file("gradlew.bat", readFile("./assets/gradlew.bat"));
-                
-                // gradle 폴더 생성
-                projectFolder.folder(`gradle/wrapper`);
-                // gradle 관련 파일 추가
-                projectFolder.file("gradle/wrapper/gradle-wrapper.jar", readFile("./assets/gradle-wrapper.jar"));
-                projectFolder.file("gradle/wrapper/gradle-wrapper.properties", readFile("./assets/gradle-wrapper.properties"));
 
                 // resources 폴더 생성
                 projectFolder.folder(`src/main/resources`);
@@ -213,6 +387,15 @@
                 projectFolder.file(`src/main/java/${packagePath}/controller/${controllerClassName}.java`, getControllerContent(controllerClassName, packageName));
 
                 projectFolder.folder(`src/main/java/${packagePath}/dto`);
+
+                const tableJson = getTableDataAsJson();
+                const createTableSql = generateCreateTableSql(tableJson);
+
+                console.log("추출된 JSON:", tableJson);
+                console.log("생성된 SQL:\n", createTableSql);
+
+                // 필요하다면 resources 폴더에 schema.sql 파일로 추가할 수도 있습니다.
+                projectFolder.file("src/main/resources/schema.sql", createTableSql);
 
                 // 압축 파일 생성 및 다운로드
                 const content = await zip.generateAsync({ type: "blob" });
@@ -290,6 +473,7 @@
                 controllerContent += `\n`
                 controllerContent += `import org.springframework.http.ResponseEntity;\n`
                 controllerContent += `import org.springframework.web.bind.annotation.*;\n`
+                controllerContent += `import java.util.Map;\n`
                 controllerContent += `\n`
                 controllerContent += `@RestController\n`
                 controllerContent += `@RequestMapping("")\n`
@@ -301,8 +485,20 @@
 
                 return controllerContent;
             }
+
+            function createFile(folder, options) {
+                const { name, assetPath, content, isBinary } = options;
+                if (assetPath) {
+                    readFile(assetPath).then(fileContent => {
+                        folder.file(name, fileContent, { binary: isBinary });
+                    });
+                } else {
+                    folder.file(name, content, { binary: isBinary });
+                }
+            }
             
             async function readFile(filePath) {
+                return "";
                 try {
                     const response = await fetch(filePath);
                     if (!response.ok) {
@@ -315,6 +511,6 @@
                     return null;
                 }
             }
-        </script>
+        </script> -->
     </body>
 </html>
