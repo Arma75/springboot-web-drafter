@@ -8,7 +8,9 @@ function createSchemaFiles(rootFolder, schemaJson, database) {
 }
 
 function generatePostgreSQLCreateTableSql(schemaJson) {
-    let sql = `CREATE TABLE ${schemaJson.tableName} (\n`;
+    let sql = `DROP TABLE IF EXISTS ${schemaJson.tableName};\n`;
+    sql += `\n`;
+    sql += `CREATE TABLE ${schemaJson.tableName} (\n`;
     const columnDefinitions = [];
     const pkColumns = []; // PK 컬럼 이름을 담을 배열
     
