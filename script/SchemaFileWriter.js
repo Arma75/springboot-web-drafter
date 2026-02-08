@@ -5,6 +5,9 @@ function createSchemaFiles(rootFolder, schemaJson, database) {
     
     const tableCreateSQL = generatePostgreSQLCreateTableSql(schemaJson);
     FileUtil.createFile(rootFolder, {name: "src/main/resources/schema.sql", content: tableCreateSQL});
+
+    const insertSQL = generatePostgreSQLInsertSql(schemaJson, 10);
+    FileUtil.createFile(rootFolder, {name: "src/main/resources/data.sql", content: insertSQL});
 }
 
 function generatePostgreSQLCreateTableSql(schemaJson) {
@@ -22,7 +25,7 @@ function generatePostgreSQLCreateTableSql(schemaJson) {
         }
 
         if (col.isIncrement) {
-            column = " ${col.name} SERIAL";
+            column = `    ${col.name} SERIAL`;
         }
 
         if (!col.isNullable) {
@@ -53,4 +56,39 @@ function generatePostgreSQLCreateTableSql(schemaJson) {
     sql += "\n);";
     
     return sql;
+}
+
+function generatePostgreSQLInsertSql(schemaJson, count = 1) {
+    let sql = "";
+    for (let i = 0; i < count; i++) {
+        sql += `INSERT INTO ${schemaJson.tableName} (\n`;
+        sql += `    ${schemaJson.columns.map(col => col.name).join(", ")}\n`;
+        sql += `) VALUES (\n`;
+        sql += `    ${schemaJson.columns.map((column) => `${generateRandomValue(column)}`).join(", ")}\n`;
+        sql += `);\n`;
+    }
+
+    return sql;
+}
+
+function generateRandomValue(column) {
+    switch (column.type.toUpperCase()) {
+        case 'BIGINT':
+        case 'INT':
+            return Math.floor(Math.random() * 1000);
+        case 'VARCHAR':
+        case 'TEXT':
+            const randomStr = Math.random().toString(36).substring(2, 8);
+            return `'${column.name.toLowerCase()}_${randomStr}'`;
+        case 'BOOLEAN':
+            return Math.random() > 0.5 ? 'TRUE' : 'FALSE';
+        case 'TIMESTAMP':
+        case 'DATETIME':
+        case 'DATE':
+            return 'CURRENT_TIMESTAMP';
+        case 'CHAR':
+            return Math.random() > 0.5 ?  "'Y'" : "'N'";
+        default:
+            return "NULL";
+    }
 }
