@@ -121,6 +121,7 @@
         <script src="./script/FileUtil.js"></script>
         <script src="./script/GradleFileWriter.js"></script>
         <script src="./script/SchemaFileWriter.js"></script>
+        <script src="./script/DtoFileWriter.js"></script>
         <script>
 
             async function generateProject() {
@@ -139,8 +140,7 @@
                 // 최상위 폴더 생성
                 const projectFolder = zip.folder(projectName);
 
-                // gradle 파일 생성
-                createGradleFiles(projectFolder, {
+                const userOptions = {
                     projectName: projectName,
                     groupName: groupName,
                     description: description,
@@ -149,79 +149,85 @@
                     useJDBC: true,
                     useH2DB: true,
                     usePostgreSQL: false
-                });
+                }
+
+                const tableSchema = {
+                    tableName: "PLAYLIST",
+                    columns: [
+                        {
+                            name: "ID",
+                            type: "BIGINT",
+                            length: "20",
+                            defaultValue: "",
+                            isPrimaryKey: true,
+                            isNullable: false,
+                            isIncrement: true
+                        },
+                        {
+                            name: "GENRE",
+                            type: "VARCHAR",
+                            length: "50",
+                            defaultValue: "",
+                            isPrimaryKey: false,
+                            isNullable: false,
+                            isIncrement: false
+                        },
+                        {
+                            name: "ARTIST",
+                            type: "VARCHAR",
+                            length: "100",
+                            defaultValue: "",
+                            isPrimaryKey: false,
+                            isNullable: false,
+                            isIncrement: false
+                        },
+                        {
+                            name: "SONG_TITLE",
+                            type: "VARCHAR",
+                            length: "200",
+                            defaultValue: "",
+                            isPrimaryKey: false,
+                            isNullable: true,
+                            isIncrement: false
+                        },
+                        {
+                            name: "IS_USED",
+                            type: "CHAR",
+                            length: "1",
+                            defaultValue: "Y",
+                            isPrimaryKey: false,
+                            isNullable: false,
+                            isIncrement: false
+                        },
+                        {
+                            name: "CREATED_AT",
+                            type: "TIMESTAMP",
+                            length: null,
+                            defaultValue: "CURRENT_TIMESTAMP",
+                            isPrimaryKey: false,
+                            isNullable: false,
+                            isIncrement: false
+                        },
+                        {
+                            name: "UPDATED_AT",
+                            type: "TIMESTAMP",
+                            length: null,
+                            defaultValue: "CURRENT_TIMESTAMP",
+                            isPrimaryKey: false,
+                            isNullable: false,
+                            isIncrement: false
+                        }
+                    ]
+                };
+
+                // gradle 파일 생성
+                createGradleFiles(projectFolder, userOptions);
 
                 // 스키마 파일 생성
-                createSchemaFiles(projectFolder, {
-                        tableName: "PLAYLIST",
-                        columns: [
-                            {
-                                name: "ID",
-                                type: "BIGINT",
-                                length: "20",
-                                defaultValue: "",
-                                isPrimaryKey: true,
-                                isNullable: false,
-                                isIncrement: true
-                            },
-                            {
-                                name: "GENRE",
-                                type: "VARCHAR",
-                                length: "50",
-                                defaultValue: "",
-                                isPrimaryKey: false,
-                                isNullable: false,
-                                isIncrement: false
-                            },
-                            {
-                                name: "ARTIST",
-                                type: "VARCHAR",
-                                length: "100",
-                                defaultValue: "",
-                                isPrimaryKey: false,
-                                isNullable: false,
-                                isIncrement: false
-                            },
-                            {
-                                name: "SONG_TITLE",
-                                type: "VARCHAR",
-                                length: "200",
-                                defaultValue: "",
-                                isPrimaryKey: false,
-                                isNullable: true,
-                                isIncrement: false
-                            },
-                            {
-                                name: "IS_USED",
-                                type: "CHAR",
-                                length: "1",
-                                defaultValue: "Y",
-                                isPrimaryKey: false,
-                                isNullable: false,
-                                isIncrement: false
-                            },
-                            {
-                                name: "CREATED_AT",
-                                type: "TIMESTAMP",
-                                length: null,
-                                defaultValue: "CURRENT_TIMESTAMP",
-                                isPrimaryKey: false,
-                                isNullable: false,
-                                isIncrement: false
-                            },
-                            {
-                                name: "UPDATED_AT",
-                                type: "TIMESTAMP",
-                                length: null,
-                                defaultValue: "CURRENT_TIMESTAMP",
-                                isPrimaryKey: false,
-                                isNullable: false,
-                                isIncrement: false
-                            }
-                        ]
-                    },
-                    "h2db"
-                );
+                createSchemaFiles(projectFolder, tableSchema, "h2db");
+
+                // DTO 파일 생성
+                createDtoFile(projectFolder, userOptions, tableSchema);
 
                 // 압축 파일 생성 및 다운로드
                 FileUtil.download(zip, projectName);
