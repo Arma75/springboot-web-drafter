@@ -1,59 +1,182 @@
 <!DOCTYPE html>
 <html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spring Boot Project Drafter</title>
     <style>
-        body {
-            background-color: #e8eef7;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        th {
-            padding: 12px 16px;
-            background-color: #f5f6fa;
-            border: 1px solid #eef1f8;
-            font-weight: 400;
-            font-size: 16px;
-            color: #abb0bf;
-            text-align: left;
-        }
-        th:first-child {
-            border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
-        }
-        th:last-child {
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
 
-        td {
-            padding: 12px 16px;
-            background-color: #fff;
-            border: 1px solid #e5ebf4;
-        }
-        td:first-child {
-            border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
-        }
-        td:last-child {
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
+:root {
+    --spring-green: #6db33f;
+    --spring-dark: #2c3e50;
+    --soft-gray: #f8f9fa;
+    --border-color: #e9ecef;
+    --text-main: #343a40;
+    --text-muted: #6c757d;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #ffffff;
+    color: var(--text-main);
+    margin: 0;
+    padding: 80px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 컨테이너 공통 */
+section, article {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 40px;
+}
+
+/* 상단 설정 영역: 세로 나열 */
+section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+section article {
+    margin-bottom: 0;
+}
+
+/* 제목 스타일: 더 부드럽고 세련되게 */
+h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--spring-dark);
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+h4::before {
+    content: '';
+    width: 4px;
+    height: 14px;
+    background-color: var(--spring-green);
+    margin-right: 8px;
+    border-radius: 2px;
+}
+
+/* 입력창: 부드러운 라운드와 포커스 효과 */
+input[type="text"], select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: var(--soft-gray);
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--spring-green);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(109, 179, 63, 0.1);
+}
+
+/* 테이블 스타일: 지저분한 선을 줄이고 여백 강조 */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px; /* 행 사이 간격 */
+    margin-top: 10px;
+}
+
+th {
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: left;
+    font-weight: 500;
+}
+
+td {
+    padding: 12px;
+    background-color: #fff;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+td:first-child { border-left: 1px solid var(--border-color); border-radius: 8px 0 0 8px; }
+td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8px 8px 0; }
+
+/* 버튼 디자인 */
+#columnAddButton {
+    width: 100%;
+    padding: 12px;
+    background-color: transparent;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.2s;
+}
+
+#columnAddButton:hover {
+    border-color: var(--spring-green);
+    color: var(--spring-green);
+    background-color: rgba(109, 179, 63, 0.05);
+}
+
+#generateBtn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    padding: 16px 32px;
+    background-color: var(--spring-dark) !important;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    cursor: pointer;
+    z-index: 100;
+}
+
+#generateBtn:hover {
+    background-color: var(--spring-green) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(109, 179, 63, 0.3);
+}
+
+.columnRemoveButton, button[onclick^="removeRow"] {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-weight: 500;
+    cursor: pointer;
+}
     </style>
     <body>
         <section>
             <article>
                 <h4>Team Name</h4>
-                <input type="text" id="teamName" name="teamName" value="coupang">
+                <input type="text" id="teamName" name="teamName" value="buds">
             </article>
 
             <article>
                 <h4>Project Name</h4>
-                <input type="text" id="projectName" name="projectName" value="springboot-project">
+                <input type="text" id="projectName" name="projectName" value="demo">
             </article>
 
             <article>
                 <h4>Description</h4>
-                <input type="text" id="description" name="description" value="Spring Boot project">
+                <input type="text" id="description" name="description" value="Spring Boot demo project">
             </article>
         </section>
 
@@ -126,13 +249,12 @@
         <script>
 
             async function generateProject() {
-                // const teamName = document.getElementById("teamName").value;
-                // const projectName = document.getElementById("projectName").value;
-                // const description = document.getElementById("description").value;
-                // const groupName = "com." + teamName;
-                const teamName = "ggomi";
-                const projectName = "playlist";
-                const description = "This is a playlist.";
+                const teamName = document.getElementById("teamName").value;
+                const projectName = document.getElementById("projectName").value;
+                const description = document.getElementById("description").value;
+                // const teamName = "ggomi";
+                // const projectName = "playlist";
+                // const description = "This is a playlist.";
                 
                 const groupName = "com." + teamName;
 
@@ -152,74 +274,7 @@
                     usePostgreSQL: false
                 }
 
-                const tableSchema = {
-                    tableName: "PLAYLIST",
-                    columns: [
-                        {
-                            name: "ID",
-                            type: "BIGINT",
-                            length: "20",
-                            defaultValue: "",
-                            isPrimaryKey: true,
-                            isNullable: false,
-                            isIncrement: true
-                        },
-                        {
-                            name: "GENRE",
-                            type: "VARCHAR",
-                            length: "50",
-                            defaultValue: "",
-                            isPrimaryKey: false,
-                            isNullable: false,
-                            isIncrement: false
-                        },
-                        {
-                            name: "ARTIST",
-                            type: "VARCHAR",
-                            length: "100",
-                            defaultValue: "",
-                            isPrimaryKey: false,
-                            isNullable: false,
-                            isIncrement: false
-                        },
-                        {
-                            name: "SONG_TITLE",
-                            type: "VARCHAR",
-                            length: "200",
-                            defaultValue: "",
-                            isPrimaryKey: false,
-                            isNullable: true,
-                            isIncrement: false
-                        },
-                        {
-                            name: "IS_USED",
-                            type: "CHAR",
-                            length: "1",
-                            defaultValue: "Y",
-                            isPrimaryKey: false,
-                            isNullable: false,
-                            isIncrement: false
-                        },
-                        {
-                            name: "CREATED_AT",
-                            type: "TIMESTAMP",
-                            length: null,
-                            defaultValue: "CURRENT_TIMESTAMP",
-                            isPrimaryKey: false,
-                            isNullable: false,
-                            isIncrement: false
-                        },
-                        {
-                            name: "UPDATED_AT",
-                            type: "TIMESTAMP",
-                            length: null,
-                            defaultValue: "CURRENT_TIMESTAMP",
-                            isPrimaryKey: false,
-                            isNullable: false,
-                            isIncrement: false
-                        }
-                    ]
-                };
+                const tableSchema = getTableDataAsJson();
 
                 // gradle 파일 생성
                 createGradleFiles(projectFolder, userOptions);
@@ -238,6 +293,123 @@
             }
 
             document.getElementById("generateBtn").addEventListener("click", generateProject);
+            function getTableDataAsJson() {
+                const tableName = document.getElementById("tableName").value;
+                const rows = document.querySelectorAll("table tbody tr");
+                const columns = [];
+
+                rows.forEach(row => {
+                    columns.push({
+                        name: row.querySelector('input[name="columnName"]').value,
+                        type: row.querySelector('select').value,
+                        length: row.querySelector('input[name="columnLength"]').value,
+                        defaultValue: row.querySelector('input[name="columnDefault"]').value,
+                        isPrimaryKey: row.querySelector('input[name="columnPK"]').checked,
+                        isNullable: row.querySelector('input[name="columnNullable"]').checked,
+                        isIncrement: row.querySelector('input[name="columnIncrement"]').checked
+                    });
+                });
+
+                return {
+                    tableName: tableName,
+                    columns: columns
+                };
+            }
+            function generateCreateTableSql(schemaJson) {
+                let sql = `CREATE TABLE ${schemaJson.tableName} (\n`;
+                const columnDefinitions = [];
+                const pkColumns = []; // PK 컬럼 이름을 담을 배열
+
+                schemaJson.columns.forEach(col => {
+                    let line = `    ${col.name} ${col.type}`;
+                    
+                    // 길이 설정 (데이터 타입에 따라 선택적)
+                    if (col.length && ["VARCHAR", "INT", "BIGINT"].includes(col.type)) {
+                        line += `(${col.length})`;
+                    }
+
+                    // Auto Increment 처리 (H2 호환)
+                    if (col.isIncrement) line += " AUTO_INCREMENT";
+                    
+                    // Nullable 처리
+                    if (!col.isNullable) line += " NOT NULL";
+                    
+                    // 기본값 처리
+                    if (col.defaultValue) {
+                        const isNumeric = ["INT", "BIGINT", "BOOLEAN"].includes(col.type);
+                        line += ` DEFAULT ${isNumeric ? col.defaultValue : `'${col.defaultValue}'`}`;
+                    }
+
+                    // PK 리스트에 추가 (나중에 한꺼번에 처리)
+                    if (col.isPrimaryKey) {
+                        pkColumns.push(col.name);
+                    }
+
+                    columnDefinitions.push(line);
+                });
+
+                // 모든 컬럼 정의 추가
+                sql += columnDefinitions.join(",\n");
+
+                // PK가 있을 경우 하단에 별도 선언
+                if (pkColumns.length > 0) {
+                    sql += `,\n    PRIMARY KEY (${pkColumns.join(", ")})`;
+                }
+
+                sql += "\n);";
+                
+                return sql;
+            }
+
+            const columnAddButton = document.getElementById("columnAddButton");
+            columnAddButton.addEventListener("click", function() {
+                const tbody = document.querySelector("table tbody");
+                const newRow = document.createElement("tr");
+
+                const rowId = Date.now();
+                newRow.classList.add(`columnRow${rowId}`);
+                newRow.innerHTML = `
+                <td>
+                    <input type="text" name="columnName" value="id">
+                </td>
+                <td>
+                    <select>
+                        <option value="BIGINT">BIGINT</option>
+                        <option value="INT">INT</option>
+                        <option value="VARCHAR">VARCHAR</option>
+                        <option value="TEXT">TEXT</option>
+                        <option value="DATETIME">DATETIME</option>
+                        <option value="DATE">DATE</option>
+                        <option value="BOOLEAN">BOOLEAN</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="columnLength" value="20">
+                </td>
+                <td>
+                    <input type="text" name="columnDefault" value="">
+                </td>
+                <td>
+                    <input type="checkbox" name="columnPK">
+                </td>
+                <td>
+                    <input type="checkbox" name="columnNullable">
+                </td>
+                <td>
+                    <input type="checkbox" name="columnIncrement">
+                </td>
+                <td>
+                    <button onclick="removeRow(${rowId})">Remove</button>
+                </td>`;
+                tbody.appendChild(newRow);
+            });
+
+            function removeRow(rowNumber) {
+                const row = document.querySelector(`.columnRow${rowNumber}`);
+                if (row) {
+                    row.remove();
+                }
+            }
         </script>
         <!-- <script src="./script/gradleWriter.js"></script>
 
