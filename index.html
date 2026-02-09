@@ -122,6 +122,7 @@
         <script src="./script/GradleFileWriter.js"></script>
         <script src="./script/SchemaFileWriter.js"></script>
         <script src="./script/DtoFileWriter.js"></script>
+        <script src="./script/DaoFileWriter.js"></script>
         <script>
 
             async function generateProject() {
@@ -228,6 +229,9 @@
 
                 // DTO 파일 생성
                 createDtoFile(projectFolder, userOptions, tableSchema);
+
+                // DAO 파일 생성
+                createDaoFile(projectFolder, userOptions, tableSchema);
 
                 // 압축 파일 생성 및 다운로드
                 FileUtil.download(zip, projectName);
