@@ -240,12 +240,16 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
 
         <button id="generateBtn" style="background-color: #5b7cfd;">생성하기</button>
 
+        <script src="./script/case-converter.js"></script>
+        <script src="./script/sql-mapper.js"></script>
+        <script src="./script/json-to-java.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="./script/FileUtil.js"></script>
         <script src="./script/GradleFileWriter.js"></script>
         <script src="./script/SchemaFileWriter.js"></script>
         <script src="./script/DtoFileWriter.js"></script>
         <script src="./script/DaoFileWriter.js"></script>
+        <script src="./script/ControllerFileWriter.js"></script>
         <script>
 
             async function generateProject() {
@@ -288,6 +292,8 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 // DAO 파일 생성
                 createDaoFile(projectFolder, userOptions, tableSchema);
 
+                createControllerFiles(projectFolder, userOptions, tableSchema);
+
                 // 압축 파일 생성 및 다운로드
                 FileUtil.download(zip, projectName);
             }
@@ -311,7 +317,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 });
 
                 return {
-                    tableName: tableName,
+                    name: tableName,
                     columns: columns
                 };
             }
@@ -696,3 +702,4 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
         </script> -->
     </body>
 </html>
+
