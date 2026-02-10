@@ -29,7 +29,7 @@ body {
 /* 컨테이너 공통 */
 section, article {
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
     margin-bottom: 40px;
 }
 
@@ -166,23 +166,23 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
         <section>
             <article>
                 <h4>Team Name</h4>
-                <input type="text" id="teamName" name="teamName" value="buds">
+                <input type="text" id="teamName" name="teamName" value="ggomi">
             </article>
 
             <article>
                 <h4>Project Name</h4>
-                <input type="text" id="projectName" name="projectName" value="demo">
+                <input type="text" id="projectName" name="projectName" value="playlist">
             </article>
 
             <article>
                 <h4>Description</h4>
-                <input type="text" id="description" name="description" value="Spring Boot demo project">
+                <input type="text" id="description" name="description" value="This is a playlist.">
             </article>
         </section>
 
         <article>
             <h4>Table</h4>
-            <input type="text" id="tableName" name="tableName" value="user">
+            <input type="text" id="tableName" name="tableName" value="playlist">
 
             <table>
                 <thead>
@@ -208,8 +208,9 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                                 <option value="BIGINT">BIGINT</option>
                                 <option value="INT">INT</option>
                                 <option value="VARCHAR">VARCHAR</option>
+                                <option value="CHAR">CHAR</option>
                                 <option value="TEXT">TEXT</option>
-                                <option value="DATETIME">DATETIME</option>
+                                <option value="TIMESTAMP">DATETIME</option>
                                 <option value="DATE">DATE</option>
                                 <option value="BOOLEAN">BOOLEAN</option>
                             </select>
@@ -233,6 +234,181 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                             <button class="columnRemoveButton" onclick="removeRow(1)">Remove</button>
                         </td>
                     </tr>
+                    <tr class="columnRow2">
+                        <td>
+                            <input type="text" name="columnName" value="genre">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR" selected>VARCHAR</option>
+                                <option value="CHAR">CHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="TIMESTAMP">DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="50">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable" checked>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement">
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(2)">Remove</button>
+                        </td>
+                    </tr>
+                    <tr class="columnRow3">
+                        <td>
+                            <input type="text" name="columnName" value="artist">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR" selected>VARCHAR</option>
+                                <option value="CHAR">CHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="TIMESTAMP">DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="100">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable" checked>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement">
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(3)">Remove</button>
+                        </td>
+                    </tr>
+                    <tr class="columnRow4">
+                        <td>
+                            <input type="text" name="columnName" value="SONG_TITLE">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR" selected>VARCHAR</option>
+                                <option value="CHAR">CHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="TIMESTAMP">DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="200">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement">
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(4)">Remove</button>
+                        </td>
+                    </tr>
+                    <tr class="columnRow5">
+                        <td>
+                            <input type="text" name="columnName" value="IS_USED">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR">VARCHAR</option>
+                                <option value="CHAR" selected>CHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="TIMESTAMP">DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="200">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="Y">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable" checked>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement">
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(5)">Remove</button>
+                        </td>
+                    </tr>
+                    <tr class="columnRow6">
+                        <td>
+                            <input type="text" name="columnName" value="CREATED_AT">
+                        </td>
+                        <td>
+                            <select>
+                                <option value="BIGINT">BIGINT</option>
+                                <option value="INT">INT</option>
+                                <option value="VARCHAR">VARCHAR</option>
+                                <option value="CHAR">CHAR</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="TIMESTAMP" selected>DATETIME</option>
+                                <option value="DATE">DATE</option>
+                                <option value="BOOLEAN">BOOLEAN</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="columnLength" value="200">
+                        </td>
+                        <td>
+                            <input type="text" name="columnDefault" value="CURRENT_TIMESTAMP">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnPK">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnNullable" checked>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="columnIncrement">
+                        </td>
+                        <td>
+                            <button class="columnRemoveButton" onclick="removeRow(6)">Remove</button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <button id="columnAddButton">Add Column</button>
@@ -246,10 +422,12 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="./script/FileUtil.js"></script>
         <script src="./script/GradleFileWriter.js"></script>
+        <script src="./script/ApplicationFileWriter.js"></script>
         <script src="./script/SchemaFileWriter.js"></script>
         <script src="./script/DtoFileWriter.js"></script>
         <script src="./script/DaoFileWriter.js"></script>
         <script src="./script/ControllerFileWriter.js"></script>
+        <script src="./script/ServiceFileWriter.js"></script>
         <script>
 
             async function generateProject() {
@@ -293,6 +471,10 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 createDaoFile(projectFolder, userOptions, tableSchema);
 
                 createControllerFiles(projectFolder, userOptions, tableSchema);
+
+                createServiceFiles(projectFolder, userOptions, tableSchema);
+
+                createApplicationFiles(projectFolder, userOptions, tableSchema);
 
                 // 압축 파일 생성 및 다운로드
                 FileUtil.download(zip, projectName);
@@ -383,8 +565,9 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                         <option value="BIGINT">BIGINT</option>
                         <option value="INT">INT</option>
                         <option value="VARCHAR">VARCHAR</option>
+                        <option value="CHAR">CHAR</option>
                         <option value="TEXT">TEXT</option>
-                        <option value="DATETIME">DATETIME</option>
+                        <option value="TIMESTAMP">DATETIME</option>
                         <option value="DATE">DATE</option>
                         <option value="BOOLEAN">BOOLEAN</option>
                     </select>
@@ -399,7 +582,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                     <input type="checkbox" name="columnPK">
                 </td>
                 <td>
-                    <input type="checkbox" name="columnNullable">
+                    <input type="checkbox" name="columnNullable" checked>
                 </td>
                 <td>
                     <input type="checkbox" name="columnIncrement">
@@ -505,7 +688,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                         <option value="INT">INT</option>
                         <option value="VARCHAR">VARCHAR</option>
                         <option value="TEXT">TEXT</option>
-                        <option value="DATETIME">DATETIME</option>
+                        <option value="TIMESTAMP">DATETIME</option>
                         <option value="DATE">DATE</option>
                         <option value="BOOLEAN">BOOLEAN</option>
                     </select>

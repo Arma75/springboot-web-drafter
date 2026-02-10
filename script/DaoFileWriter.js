@@ -1,4 +1,4 @@
-function createDaoFile(rootFolder, userOptions = {}, tableSchema) {
+function createDaoFile(rootFolder, userOptions = {}, schema) {
     const defaultOptions = {
         groupName: "com.example",
         projectName: "demo",
@@ -13,107 +13,79 @@ function createDaoFile(rootFolder, userOptions = {}, tableSchema) {
 
     const packageName = options.groupName + "." + options.projectName;
     const packagePath = packageName.replace(/\./g, '/');
-    const daoClassName = StringUtil.toPascalCase(options.projectName) + "DAO";
 
     FileUtil.createFile(rootFolder, {
-        name: `src/main/java/${packagePath}/dao/${daoClassName}.java`,
-        content: generateDaoContent(options, tableSchema)
+        name: `src/main/java/${packagePath}/dao/${getDaoClassName(schema)}.java`,
+        content: generateDaoContent(options, schema)
     });
 }
 
-function generateDaoContent(options, tableSchema) {
+function generateDaoContent(options, schema) {
     const packageName = options.groupName + "." + options.projectName;
-    const packagePath = packageName.replace(/\./g, '/');
-    const dtoClassName = StringUtil.toPascalCase(options.projectName) + "DTO";
-    const daoClassName = StringUtil.toPascalCase(options.projectName) + "DAO";
-    const typeMap = {
-        'BOOLEAN': 'Boolean',
-        'INT': 'Integer',
-        'BIGINT': 'Long',
-        'VARCHAR': 'String',
-        'TEXT': 'String',
-        'CHAR': 'String',
-        'TIMESTAMP': 'LocalDateTime',
-        'DATETIME': 'LocalDateTime',
-        'DATE': 'java.time.LocalDate',
-    };
 
-    // pk 컬럼들만 필터링
-    const pkColumns = tableSchema.columns.filter(col => col.isPrimaryKey);
+    const controllerClassName = getControllerClassName(schema);
+    const serviceClassName = getServiceClassName(schema);
+    const serviceInstanceName = getServiceInstanceName(schema);
+    const dtoClassName = getDtoClassName(schema);
+    const dtoInstanceName = getDtoInstanceName(schema);
+    const daoClassName = getDaoClassName(schema);
 
-    // pk 파라미터 생성
-    const pkParams = pkColumns.map(col => {
-        const javaType = typeMap[col.type.toUpperCase()] || 'String';
-        const camelName = StringUtil.toCamelCase(col.name);
-        return `${javaType} ${camelName}`;
-    }).join(", ");
+    const pkParams = getPrimaryKeyParams(schema);
+    const pkArgs = getPrimaryKeyArgs(schema);
 
-    let daoContent = "";
-    daoContent += `package ${packageName}.dao;\n`
-    daoContent += `\n`
-    daoContent += `import java.util.List;\n`
-    daoContent += `import org.springframework.stereotype.Repository;\n`
-    daoContent += `import ${packageName}.dto.${dtoClassName};\n`
-    daoContent += `\n`
-    daoContent += `@Repository\n`;
-    daoContent += `public class ${daoClassName} {\n`
-    daoContent += `    public int create(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int createBulk(List<${dtoClassName}> dtos) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public ${dtoClassName} findById(${pkParams}) {\n`;
-    daoContent += `        return null;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public List<${dtoClassName}> findAll(${dtoClassName} dto, int offset, int size, String sort) {\n`;
-    daoContent += `        return null;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int countAll(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public List<${dtoClassName}> findRandom(${dtoClassName} dto, int count) {\n`;
-    daoContent += `        return null;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int update(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int updateBulk(List<${dtoClassName}> dtos) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int patch(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int patchBulk(List<${dtoClassName}> dtos) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int unuse(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int unuseBulk(List<${dtoClassName}> dtos) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int delete(${dtoClassName} dto) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `    public int deleteBulk(List<${dtoClassName}> dtos) {\n`;
-    daoContent += `        return 0;\n`;
-    daoContent += `    }\n`;
-    daoContent += `\n`;
-    daoContent += `}`
+    const insertSqlArgs = schema.columns.filter(col => !col.isIncrement).map(col => `${dtoInstanceName}.get${toPascalCase(col.name)}()`).join(", ");
 
-    return daoContent;
+    let content = "";
+    content += `package ${packageName}.dao;\n`
+    content += `\n`
+    content += `import java.util.List;\n`
+    content += `import org.springframework.stereotype.Repository;\n`
+    content += `import org.springframework.jdbc.core.BeanPropertyRowMapper;\n`
+    content += `import org.springframework.jdbc.core.RowMapper;\n`
+    content += `import org.springframework.jdbc.core.JdbcTemplate;\n`
+    content += `${getJavaTypeImports(getPrimaryColumns(schema)).join("\n")}\n`;
+    content += `\n`
+    content += `import ${packageName}.dto.${dtoClassName};\n`
+    content += `\n`
+    content += `@Repository\n`;
+    content += `public class ${daoClassName} {\n`
+    content += `    private final RowMapper<${dtoClassName}> rowMapper = new BeanPropertyRowMapper<>(${dtoClassName}.class);\n`
+    content += `    private final JdbcTemplate jdbcTemplate;\n`
+    content += `\n`
+    content += `    public ${daoClassName}(JdbcTemplate jdbcTemplate) {\n`
+    content += `        this.jdbcTemplate = jdbcTemplate;\n`
+    content += `    }\n`
+    content += `\n`
+    content += `    public int create(${dtoClassName} ${dtoInstanceName}) {\n`;
+    content += `        String sql = "${generatePreparedInsertSql(schema)}";\n`;
+    content += `        return jdbcTemplate.update(sql, ${insertSqlArgs});\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public ${dtoClassName} findById(${pkParams}) {\n`;
+    content += `        String sql = "${generatePreparedSelectOneSql(schema)}";\n`;
+    content += `        return jdbcTemplate.queryForObject(sql, rowMapper, ${pkArgs});\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public List<${dtoClassName}> findAll(${dtoClassName} ${dtoInstanceName}, int offset, int size, String sort) {\n`;
+    content += `        return null;\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public int countAll(${dtoClassName} ${dtoInstanceName}) {\n`;
+    content += `        return 0;\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public int update(${dtoClassName} ${dtoInstanceName}) {\n`;
+    content += `        return 0;\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public int patch(${dtoClassName} ${dtoInstanceName}) {\n`;
+    content += `        return 0;\n`;
+    content += `    }\n`;
+    content += `\n`;
+    content += `    public int delete(${pkParams}) {\n`;
+    content += `        return 0;\n`;
+    content += `    }\n`;
+    content += `}`
+
+    return content;
 }

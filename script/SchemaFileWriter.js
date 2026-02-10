@@ -4,9 +4,9 @@ function createSchemaFiles(rootFolder, schemaJson, database) {
     }
     
     const tableCreateSQL = generatePostgreSQLCreateTableSql(schemaJson);
-    FileUtil.createFile(rootFolder, {name: "src/main/resources/schema.sql", content: tableCreateSQL});
+    FileUtil.createFile(rootFolder, {name: "src/main/resources/schema.sql", content: generateCreateTableSQL(schemaJson)});
 
-    const insertSQL = generatePostgreSQLInsertSql(schemaJson, 10);
+    const insertSQL = generateDummyInsertSql(schemaJson, 10);
     FileUtil.createFile(rootFolder, {name: "src/main/resources/data.sql", content: insertSQL});
 }
 

@@ -1,4 +1,4 @@
-function createDtoFile(rootFolder, userOptions = {}, tableSchema) {
+function createDtoFile(rootFolder, userOptions = {}, schema) {
     const defaultOptions = {
         groupName: "com.example",
         projectName: "demo",
@@ -13,91 +13,38 @@ function createDtoFile(rootFolder, userOptions = {}, tableSchema) {
 
     const packageName = options.groupName + "." + options.projectName;
     const packagePath = packageName.replace(/\./g, '/');
-    const dtoClassName = options.projectName.charAt(0).toUpperCase() + options.projectName.slice(1) + "DTO";
 
     FileUtil.createFile(rootFolder, {
-        name: `src/main/java/${packagePath}/dto/${dtoClassName}.java`,
-        content: generateDtoContent(options, tableSchema)
+        name: `src/main/java/${packagePath}/dto/${getDtoClassName(schema)}.java`,
+        content: generateDtoContent(options, schema)
     });
 }
 
-function generateDtoContent(options, tableSchema) {
+function generateDtoContent(options, schema) {
     const packageName = options.groupName + "." + options.projectName;
-    const packagePath = packageName.replace(/\./g, '/');
-    const dtoClassName = StringUtil.toPascalCase(options.projectName) + "DTO";
-    const typeMap = {
-        'BOOLEAN': 'Boolean',
-        'INT': 'Integer',
-        'BIGINT': 'Long',
-        'VARCHAR': 'String',
-        'TEXT': 'String',
-        'CHAR': 'String',
-        'TIMESTAMP': 'LocalDateTime',
-        'DATETIME': 'LocalDateTime',
-        'DATE': 'java.time.LocalDate',
-    };
 
-    let dtoContent = "";
-    dtoContent += `package ${packageName}.dto;\n`
-    dtoContent += `\n`
-    if (tableSchema.columns.some(col => ['TIMESTAMP', 'DATETIME', 'DATE'].includes(col.type.toUpperCase()))) {
-        dtoContent += `import java.time.LocalDateTime;\n`
-        dtoContent += `\n`
-    }
-    dtoContent += `public class ${dtoClassName} {\n`
-    dtoContent += `    // DTO fields and methods\n`
+    const dtoClassName = getDtoClassName(schema);
 
-    tableSchema.columns.forEach(col => {
-        const javaType = typeMap[col.type.toUpperCase()] || 'String';
-        const columnName = StringUtil.toCamelCase(StringUtil.toSnakeCase(col.name));
-        dtoContent += `    private ${javaType} ${columnName};\n\n`;
-        // Getter
-        dtoContent += `    public ${javaType} get${StringUtil.toPascalCase(columnName)}() {\n`;
-        dtoContent += `        return ${columnName};\n`;
-        dtoContent += `    }\n\n`;
-        // Setter
-        dtoContent += `    public void set${StringUtil.toPascalCase(columnName)}(${javaType} ${columnName}) {\n`;
-        dtoContent += `        this.${columnName} = ${columnName};\n`;
-        dtoContent += `    }\n\n`;
+    let content = "";
+    content += `package ${packageName}.dto;\n`
+    content += `\n`
+    content += `${getJavaTypeImports(schema.columns).join("\n")}\n`;
+    content += `\n`
+    content += `public class ${dtoClassName} {\n`
+    schema.columns.forEach(column => {
+        content += `${getFieldMember(column, 4)}\n`;
+        content += `\n`;
     });
-
-    dtoContent += `    @Override\n`;
-    dtoContent += `    public String toString() {\n`;
-    dtoContent += `        return "${dtoClassName}[" +\n`;
-    
-    const toStringParts = tableSchema.columns.map(col => {
-        const columnName = StringUtil.toCamelCase(StringUtil.toSnakeCase(col.name));
-        return `               "${columnName}=" + ${columnName} + "`;
+    schema.columns.forEach(column => {
+        content += `${getGetter(column, 4)}\n`;
+        content += `\n`;
     });
+    schema.columns.forEach(column => {
+        content += `${getSetter(column, 4)}\n`;
+        content += `\n`;
+    });
+    content += getDtoToStringMethod(schema, 4);
+    content += `}`;
 
-    dtoContent += toStringParts.join(`," +\n`) + `]";\n`;
-    dtoContent += `    }\n`;
-
-    dtoContent += `}`;
-
-    return dtoContent;
+    return content;
 }
-
-const StringUtil = {
-    toSnakeCase: function(str) {
-        if (!str) {
-            return '';
-        }
-
-        return str.replace(/([a-z])([A-Z])/g, '$1_$2')
-            .replace(/[\s\-]+/g, '_')
-            .toLowerCase()
-            .replace(/[^a-z0-9_]/g, '')
-            .replace(/_+/g, '_')
-            .replace(/^_+|_+$/g, '');
-    },
-
-    toCamelCase: function(str) {
-        return this.toSnakeCase(str).replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-    },
-
-    toPascalCase: function(str) {
-        const camelCase = this.toCamelCase(str);
-        return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
-    }
-};

@@ -103,6 +103,12 @@ const POSTGRESQL_NUMERIC_TYPES = [
 const POSTGRESQL_INCREMENTABLE_TYPES = [
     'SMALLINT', 'INT', 'INTEGER', 'BIGINT'
 ];
+const POSTGRESQL_FUNCTION_TYPES = [
+    'NOW()', 'CURRENT_TIMESTAMP'
+];
+const POSTGRESQL_LENGTH_REQUIRED_TYPES = [
+    'CHARACTER VARYING', 'VARCHAR', 'CHARACTER', 'CHAR'
+];
 
 const isValidIdentifier = (value) => {
     if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value)) {
@@ -217,6 +223,10 @@ const generateCreateTableSQL = (schema) => {
         
         let line = `    ${columnName} ${type}`;
 
+        if (POSTGRESQL_LENGTH_REQUIRED_TYPES.includes(column.type.toUpperCase())) {
+            line += `(${column.length})`
+        }
+
         if (column.isNullable === false && !column.isPrimaryKey) {
             line += " NOT NULL";
         }
@@ -226,10 +236,10 @@ const generateCreateTableSQL = (schema) => {
         }
 
         if (!column.isIncrement && column.defaultValue !== undefined && column.defaultValue !== "") {
-            const isFunc = ["TIMESTAMP", "NOW", "CURRENT_TIMESTAMP"].includes(column.defaultValue.toUpperCase());
+            const isFunction = POSTGRESQL_FUNCTION_TYPES.includes(column.defaultValue.toUpperCase());
             const isNumeric = POSTGRESQL_NUMERIC_TYPES.includes(column.type.toUpperCase());
             
-            if (isFunc || isNumeric) {
+            if (isFunction || isNumeric) {
                 line += ` DEFAULT ${column.defaultValue}`;
             } else {
                 line += ` DEFAULT '${column.defaultValue}'`;
@@ -249,8 +259,8 @@ const generateCreateTableSQL = (schema) => {
     });
 
     sql += columnDefinitions.join(",\n") + ",\n";
-    sql += `PRIMARY KEY (${primaryColumns.join(", ")})\n`;
-    sql += "\n);";
+    sql += `    PRIMARY KEY (${primaryColumns.join(", ")})\n`;
+    sql += ");";
 
     if (tableComment) {
         sql += `\nCOMMENT ON TABLE ${tableName} IS '${tableComment}';`;
@@ -258,6 +268,122 @@ const generateCreateTableSQL = (schema) => {
     if (columnCommentLines.length > 0) {
         sql += `\n${columnCommentLines.join("\n")}`;
     }
+
+    return sql;
+}
+
+function formatSqlValue(column, value) {
+    const type = column.type.toUpperCase();
+    
+    const isFunction = POSTGRESQL_FUNCTION_TYPES.includes(String(value).toUpperCase());
+    const isNumeric = POSTGRESQL_NUMERIC_TYPES.includes(type);
+    
+    if (isNumeric || isFunction || typeof value === 'number') {
+        return value;
+    }
+
+    if (type === 'BOOLEAN') {
+        return String(value).toUpperCase();
+    }
+
+    return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function generateDummyInsertSql(schema, count = 1) {
+    const tableName = toSnakeCase(schema.name).toUpperCase();
+    
+    const columnsToInsert = schema.columns.filter(col => !col.isIncrement);
+    const columnNames = columnsToInsert.map(col => toSnakeCase(col.name).toUpperCase()).join(", ");
+
+    let sql = "";
+    for (let i = 0; i < count; i++) {
+        const values = columnsToInsert.map(column => {
+            const type = column.type.toUpperCase();
+            const length = parseInt(column.length) || 1;
+
+            let val;
+
+            if (POSTGRESQL_NUMERIC_TYPES.includes(type)) {
+                val = Math.floor(Math.random() * 100);
+            } else if (type === 'BOOLEAN') {
+                val = Math.random() > 0.5 ? 'TRUE' : 'FALSE';
+            } else if (['TIME', 'DATE', 'TIMESTAMP', 'TIMESTAMP WITH TIME ZONE', 'TIMESTAMPTZ'].includes(type)) {
+                val = 'CURRENT_TIMESTAMP'
+            } else {
+                val = (i + Math.random().toString(36).substring(2, 2 + length)).toString(0, length);
+            }
+
+            return formatSqlValue(column, val);
+        }).join(", ");
+
+        sql += `INSERT INTO ${tableName} (\n`;
+        sql += `    ${columnNames}\n`;
+        sql += `) VALUES (\n`;
+        sql += `    ${values}\n`;
+        sql += `);\n`;
+    }
+
+    return sql;
+}
+
+function generateInsertSql(schema, data) {
+    const tableName = toSnakeCase(schema.name).toUpperCase();
+    
+    const columnsToInsert = schema.columns.filter(col => !col.isIncrement);
+    const columnNames = columnsToInsert.map(col => toSnakeCase(col.name).toUpperCase()).join(", ");
+
+    const values = columnsToInsert.map(col => {
+        // 전달받은 값이 없으면 디폴트값을 가지고 판단
+        const val = data[col.name] || data[toSnakeCase(col.name).toUpperCase()] || col.defaultValue;
+        
+        if (val === undefined || val === null || val === "") {
+            if (col.isNullable) {
+                return "NULL";
+            }
+            if (col.defaultValue) {
+                return formatSqlValue(col, col.defaultValue);
+            }
+            return "''";
+        }
+
+        return formatSqlValue(col, val);
+    }).join(", ");
+
+    let sql = "";
+    sql += `INSERT INTO ${tableName} (\n`;
+    sql += `    ${columnNames}\n`;
+    sql += `) VALUES (\n`;
+    sql += `    ${values}\n`;
+    sql += `);`;
+
+    return sql;
+}
+
+function generatePreparedInsertSql(schema) {
+    const tableName = toSnakeCase(schema.name).toUpperCase();
+    
+    const columnsToInsert = schema.columns.filter(col => !col.isIncrement);
+    const columnNames = columnsToInsert.map(col => toSnakeCase(col.name).toUpperCase()).join(", ");
+
+    const values = columnsToInsert.map(_ => '?').join(", ");
+
+    let sql = "";
+    sql += `INSERT INTO ${tableName} (${columnNames}) VALUES (${values});`;
+
+    return sql;
+}
+function generatePreparedSelectOneSql(schema) {
+    const tableName = toSnakeCase(schema.name).toUpperCase();
+    
+    const columnsToInsert = schema.columns.filter(col => !col.isIncrement);
+    const columnNames = columnsToInsert.map(col => toSnakeCase(col.name).toUpperCase()).join(", ");
+
+    const values = columnsToInsert.map(_ => '?').join(", ");
+
+    const conditions = schema.columns.filter(column => column.isPrimaryKey).map(c => `${toSnakeCase(c.name).toUpperCase()} = ?`).join(" AND ");
+
+    let sql = "";
+    sql += `SELECT * FROM ${tableName} WHERE ${conditions};`;
 
     return sql;
 }
