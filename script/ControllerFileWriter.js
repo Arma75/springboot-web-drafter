@@ -38,7 +38,7 @@ function generateControllerContent(options, schema) {
     content += `import org.springframework.http.ResponseEntity;\n`
     content += `import org.springframework.web.bind.annotation.DeleteMapping;\n`
     content += `import org.springframework.web.bind.annotation.GetMapping;\n`
-    content += `import org.springframework.web.bind.annotation.PatchMapping;\n`
+    // content += `import org.springframework.web.bind.annotation.PatchMapping;\n`
     content += `import org.springframework.web.bind.annotation.PostMapping;\n`
     content += `import org.springframework.web.bind.annotation.PutMapping;\n`
     content += `import org.springframework.web.bind.annotation.RequestMapping;\n`
@@ -86,12 +86,12 @@ function generateControllerContent(options, schema) {
     content += `        ${serviceInstanceName}.update(${pkArgs}, ${dtoInstanceName});\n`
     content += `        return ResponseEntity.status(200).body("Update success");\n`
     content += `    }\n`
-    content += `\n`
-    content += `    @PatchMapping("/${getPrimaryKeyPath(schema)}")\n`
-    content += `    public ResponseEntity<?> patch(${pkParams}, @RequestBody ${dtoClassName} ${dtoInstanceName}) {\n`
-    content += `        ${serviceInstanceName}.patch(${pkArgs}, ${dtoInstanceName});\n`
-    content += `        return ResponseEntity.status(200).body("Patch success");\n`
-    content += `    }\n`
+    // content += `\n`
+    // content += `    @PatchMapping("/${getPrimaryKeyPath(schema)}")\n`
+    // content += `    public ResponseEntity<?> patch(${pkParams}, @RequestBody ${dtoClassName} ${dtoInstanceName}) {\n`
+    // content += `        ${serviceInstanceName}.patch(${pkArgs}, ${dtoInstanceName});\n`
+    // content += `        return ResponseEntity.status(200).body("Patch success");\n`
+    // content += `    }\n`
     content += `\n`
     content += `    @DeleteMapping("/${getPrimaryKeyPath(schema)}")\n`
     content += `    public ResponseEntity<?> delete(${pkParams}) {\n`

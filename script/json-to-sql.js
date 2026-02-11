@@ -109,6 +109,44 @@ const POSTGRESQL_FUNCTION_TYPES = [
 const POSTGRESQL_LENGTH_REQUIRED_TYPES = [
     'CHARACTER VARYING', 'VARCHAR', 'CHARACTER', 'CHAR'
 ];
+const POSTGRESQL_DATE_TYPES = [
+    'TIME', 'DATE', 'TIMESTAMP',
+    'TIMESTAMP WITH TIME ZONE', 'TIMESTAMPTZ',
+];
+
+function getPrimaryColumns(schema) {
+    return schema.columns.filter(column => column.isPrimaryKey);
+}
+function getInsertableColumns(schema) {
+    return schema.columns.filter(column => !column.isIncrement);
+}
+function getRequiredInsertColumns(schema) {
+    return schema.columns.filter(column => {
+        if (column.isIncrement) {
+            return false;
+        }
+        if (column.isPrimaryKey) {
+            return true;
+        }
+        
+        return !column.isNullable && !column.defaultValue;
+    });
+}
+function getUpdatableColumns(schema) {
+    return schema.columns.filter(column => {
+        if (column.isIncrement) {
+            return false;
+        }
+        if (column.isPrimaryKey) {
+            return false;
+        }
+        
+        return !column.isIncrement && !column.isPrimaryKey;
+    });
+}
+function getDateColumns(schema) {
+    return schema.columns.filter(column => POSTGRESQL_DATE_TYPES.includes(column.type.toUpperCase()));
+}
 
 const isValidIdentifier = (value) => {
     if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value)) {
@@ -310,7 +348,7 @@ function generateDummyInsertSql(schema, count = 1) {
             } else if (['TIME', 'DATE', 'TIMESTAMP', 'TIMESTAMP WITH TIME ZONE', 'TIMESTAMPTZ'].includes(type)) {
                 val = 'CURRENT_TIMESTAMP'
             } else {
-                val = (i + Math.random().toString(36).substring(2, 2 + length)).toString(0, length);
+                val = (i + Math.random().toString(36).substring(2, 2 + length)).substr(0, length);
             }
 
             return formatSqlValue(column, val);
@@ -384,6 +422,44 @@ function generatePreparedSelectOneSql(schema) {
 
     let sql = "";
     sql += `SELECT * FROM ${tableName} WHERE ${conditions};`;
+
+    return sql;
+}
+function generatePreparedSelectSql(schema) {
+    const tableName = toScreamSnakeCase(schema.name);
+    
+    let sql = "";
+    sql += `SELECT * FROM ${tableName} WHERE 1=1`;
+
+    return sql;
+}
+function generatePreparedCountSql(schema) {
+    const tableName = toScreamSnakeCase(schema.name);
+    
+    let sql = "";
+    sql += `SELECT COUNT(*) FROM ${tableName} WHERE 1=1`;
+
+    return sql;
+}
+function generatePreparedUpdateSql(schema) {
+    const tableName = toScreamSnakeCase(schema.name);
+
+    const conditions = getPrimaryColumns(schema).map(c => `${toSnakeCase(c.name).toUpperCase()} = ?`).join(" AND ");
+    const values = getInsertableColumns(schema).map(c => `${toSnakeCase(c.name).toUpperCase()} = ?`).join(", ");
+    
+    let sql = "";
+    sql += `UPDATE ${tableName} SET ${values} WHERE ${conditions}`;
+
+    return sql;
+}
+function generatePreparedDeleteSql(schema) {
+    const tableName = toScreamSnakeCase(schema.name);
+
+    const conditions = getPrimaryColumns(schema).map(c => `${toSnakeCase(c.name).toUpperCase()} = ?`).join(" AND ");
+    const values = getInsertableColumns(schema).map(c => `${toSnakeCase(c.name).toUpperCase()} = ?`).join(", ");
+    
+    let sql = "";
+    sql += `DELETE FROM ${tableName} WHERE ${conditions}`;
 
     return sql;
 }

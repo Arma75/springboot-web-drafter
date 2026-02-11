@@ -2,7 +2,7 @@
 <html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spring Boot Project Drafter</title>
+    <title>Boot Draft</title>
     <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
 
@@ -163,10 +163,14 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
 }
     </style>
     <body>
+        <h1>BootDraft ver0.1</h1>
+        <p>
+            Build your database-driven Spring Boot architecture in seconds.
+        </p>
         <section>
             <article>
                 <h4>Team Name</h4>
-                <input type="text" id="teamName" name="teamName" value="ggomi">
+                <input type="text" id="teamName" name="teamName" value="buds">
             </article>
 
             <article>
@@ -356,7 +360,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                             </select>
                         </td>
                         <td>
-                            <input type="text" name="columnLength" value="200">
+                            <input type="text" name="columnLength" value="1">
                         </td>
                         <td>
                             <input type="text" name="columnDefault" value="Y">
@@ -417,7 +421,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
         <button id="generateBtn" style="background-color: #5b7cfd;">생성하기</button>
 
         <script src="./script/case-converter.js"></script>
-        <script src="./script/sql-mapper.js"></script>
+        <script src="./script/json-to-sql.js"></script>
         <script src="./script/json-to-java.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script src="./script/FileUtil.js"></script>
@@ -428,6 +432,7 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
         <script src="./script/DaoFileWriter.js"></script>
         <script src="./script/ControllerFileWriter.js"></script>
         <script src="./script/ServiceFileWriter.js"></script>
+        <script src="./script/PropertyFileWriter.js"></script>
         <script>
 
             async function generateProject() {
@@ -475,6 +480,8 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 createServiceFiles(projectFolder, userOptions, tableSchema);
 
                 createApplicationFiles(projectFolder, userOptions, tableSchema);
+
+                createPropertyFiles(projectFolder, userOptions, tableSchema);
 
                 // 압축 파일 생성 및 다운로드
                 FileUtil.download(zip, projectName);
@@ -558,13 +565,13 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 newRow.classList.add(`columnRow${rowId}`);
                 newRow.innerHTML = `
                 <td>
-                    <input type="text" name="columnName" value="id">
+                    <input type="text" name="columnName" value="name">
                 </td>
                 <td>
                     <select>
                         <option value="BIGINT">BIGINT</option>
                         <option value="INT">INT</option>
-                        <option value="VARCHAR">VARCHAR</option>
+                        <option value="VARCHAR" selected>VARCHAR</option>
                         <option value="CHAR">CHAR</option>
                         <option value="TEXT">TEXT</option>
                         <option value="TIMESTAMP">DATETIME</option>
@@ -600,289 +607,6 @@ td:last-child { border-right: 1px solid var(--border-color); border-radius: 0 8p
                 }
             }
         </script>
-        <!-- <script src="./script/gradleWriter.js"></script>
-
-        <script>
-            function getTableDataAsJson() {
-                const tableName = document.getElementById("tableName").value;
-                const rows = document.querySelectorAll("table tbody tr");
-                const columns = [];
-
-                rows.forEach(row => {
-                    columns.push({
-                        name: row.querySelector('input[name="columnName"]').value,
-                        type: row.querySelector('select').value,
-                        length: row.querySelector('input[name="columnLength"]').value,
-                        defaultValue: row.querySelector('input[name="columnDefault"]').value,
-                        isPrimaryKey: row.querySelector('input[name="columnPK"]').checked,
-                        isNullable: row.querySelector('input[name="columnNullable"]').checked,
-                        isIncrement: row.querySelector('input[name="columnIncrement"]').checked
-                    });
-                });
-
-                return {
-                    tableName: tableName,
-                    columns: columns
-                };
-            }
-            function generateCreateTableSql(schemaJson) {
-                let sql = `CREATE TABLE ${schemaJson.tableName} (\n`;
-                const columnDefinitions = [];
-                const pkColumns = []; // PK 컬럼 이름을 담을 배열
-
-                schemaJson.columns.forEach(col => {
-                    let line = `    ${col.name} ${col.type}`;
-                    
-                    // 길이 설정 (데이터 타입에 따라 선택적)
-                    if (col.length && ["VARCHAR", "INT", "BIGINT"].includes(col.type)) {
-                        line += `(${col.length})`;
-                    }
-
-                    // Auto Increment 처리 (H2 호환)
-                    if (col.isIncrement) line += " AUTO_INCREMENT";
-                    
-                    // Nullable 처리
-                    if (!col.isNullable) line += " NOT NULL";
-                    
-                    // 기본값 처리
-                    if (col.defaultValue) {
-                        const isNumeric = ["INT", "BIGINT", "BOOLEAN"].includes(col.type);
-                        line += ` DEFAULT ${isNumeric ? col.defaultValue : `'${col.defaultValue}'`}`;
-                    }
-
-                    // PK 리스트에 추가 (나중에 한꺼번에 처리)
-                    if (col.isPrimaryKey) {
-                        pkColumns.push(col.name);
-                    }
-
-                    columnDefinitions.push(line);
-                });
-
-                // 모든 컬럼 정의 추가
-                sql += columnDefinitions.join(",\n");
-
-                // PK가 있을 경우 하단에 별도 선언
-                if (pkColumns.length > 0) {
-                    sql += `,\n    PRIMARY KEY (${pkColumns.join(", ")})`;
-                }
-
-                sql += "\n);";
-                
-                return sql;
-            }
-
-            const columnAddButton = document.getElementById("columnAddButton");
-            columnAddButton.addEventListener("click", function() {
-                const tbody = document.querySelector("table tbody");
-                const newRow = document.createElement("tr");
-
-                const rowId = Date.now();
-                newRow.classList.add(`columnRow${rowId}`);
-                newRow.innerHTML = `
-                <td>
-                    <input type="text" name="columnName" value="id">
-                </td>
-                <td>
-                    <select>
-                        <option value="BIGINT">BIGINT</option>
-                        <option value="INT">INT</option>
-                        <option value="VARCHAR">VARCHAR</option>
-                        <option value="TEXT">TEXT</option>
-                        <option value="TIMESTAMP">DATETIME</option>
-                        <option value="DATE">DATE</option>
-                        <option value="BOOLEAN">BOOLEAN</option>
-                    </select>
-                </td>
-                <td>
-                    <input type="text" name="columnLength" value="20">
-                </td>
-                <td>
-                    <input type="text" name="columnDefault" value="">
-                </td>
-                <td>
-                    <input type="checkbox" name="columnPK" checked>
-                </td>
-                <td>
-                    <input type="checkbox" name="columnNullable">
-                </td>
-                <td>
-                    <input type="checkbox" name="columnIncrement" checked>
-                </td>
-                <td>
-                    <button onclick="removeRow(${rowId})">Remove</button>
-                </td>`;
-                tbody.appendChild(newRow);
-            });
-
-            function removeRow(rowNumber) {
-                const row = document.querySelector(`.columnRow${rowNumber}`);
-                if (row) {
-                    row.remove();
-                }
-            }
-            
-            async function generateProject() {
-                const teamName = document.getElementById("teamName").value;
-                const projectName = document.getElementById("projectName").value;
-                const description = document.getElementById("description").value;
-                const groupName = "com." + teamName;
-
-                const zip = new JSZip();
-                const packageName = groupName + "." + projectName;
-                const packagePath = packageName.replace(/\./g, '/');
-
-                // 최상위 폴더 생성
-                const projectFolder = zip.folder(projectName);
-
-                createGradleFiles(projectFolder, {
-                    projectName: projectName,
-                    groupName: groupName,
-                    description: description,
-                    javaVersion: 17
-                });
-                // README.md 파일 추가
-                projectFolder.file("README.md", getReadMeContent(projectName, description));
-
-                // resources 폴더 생성
-                projectFolder.folder(`src/main/resources`);
-                // application.properties 파일 추가
-                projectFolder.file("src/main/resources/application.properties", `spring.application.name=${projectName}`);
-
-                projectFolder.folder(`src/main/java/${packagePath}`);
-                // Application.java 파일 추가
-                const applicationClassName = projectName.charAt(0).toUpperCase() + projectName.slice(1) + "Application";
-                projectFolder.file(`src/main/java/${packagePath}/${applicationClassName}.java`, getApplicationJavaContent(applicationClassName, packageName));
-
-                projectFolder.folder(`src/main/java/${packagePath}/controller`);
-                const controllerClassName = projectName.charAt(0).toUpperCase() + projectName.slice(1) + "Controller";
-                projectFolder.file(`src/main/java/${packagePath}/controller/${controllerClassName}.java`, getControllerContent(controllerClassName, packageName));
-
-                projectFolder.folder(`src/main/java/${packagePath}/dto`);
-
-                const tableJson = getTableDataAsJson();
-                const createTableSql = generateCreateTableSql(tableJson);
-
-                console.log("추출된 JSON:", tableJson);
-                console.log("생성된 SQL:\n", createTableSql);
-
-                // 필요하다면 resources 폴더에 schema.sql 파일로 추가할 수도 있습니다.
-                projectFolder.file("src/main/resources/schema.sql", createTableSql);
-
-                // 압축 파일 생성 및 다운로드
-                const content = await zip.generateAsync({ type: "blob" });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = `${projectName}.zip`;
-                link.click();
-            }
-
-            function getBuildGradleContent(groupName, description, javaVersion) {
-                let buildGradleContent = "";
-                buildGradleContent += `plugins {\n`
-                buildGradleContent += `    id 'java'\n`
-                buildGradleContent += `    id 'org.springframework.boot' version '3.5.9'\n`
-                buildGradleContent += `    id 'io.spring.dependency-management' version '1.1.7'\n`
-                buildGradleContent += `}\n`
-                buildGradleContent += `\n`
-                buildGradleContent += `group = '${groupName}'\n`
-                buildGradleContent += `version = '0.0.1-SNAPSHOT'\n`
-                buildGradleContent += `description = '${description}'\n`
-                buildGradleContent += `\n`
-                buildGradleContent += `java {\n`
-                buildGradleContent += `    toolchain {\n`
-                buildGradleContent += `        languageVersion = JavaLanguageVersion.of(${javaVersion})\n`
-                buildGradleContent += `    }\n`
-                buildGradleContent += `}\n`
-                buildGradleContent += `\n`
-                buildGradleContent += `repositories {\n`
-                buildGradleContent += `    mavenCentral()\n`
-                buildGradleContent += `}\n`
-                buildGradleContent += `\n`
-                buildGradleContent += `dependencies {\n`
-                buildGradleContent += `    implementation 'org.springframework.boot:spring-boot-starter-web'\n`
-                buildGradleContent += `}`;
-                
-                return buildGradleContent;
-            }
-
-            function getSettingsGradleContent(projectName) {
-                let settingsGradleContent = "";
-                settingsGradleContent += `rootProject.name = '${projectName}'\n`;
-
-                return settingsGradleContent;
-            }
-
-            function getReadMeContent(projectName, description) {
-                let readmeContent = "";
-                readmeContent += `# ${projectName}\n`;
-                readmeContent += `\n`;
-                readmeContent += `${description}`;
-                
-                return readmeContent;
-            }
-
-            function getApplicationJavaContent(applicationClassName, packageName) {
-                let applicationJavaContent = "";
-                applicationJavaContent += `package ${packageName};\n`
-                applicationJavaContent += `\n`
-                applicationJavaContent += `import org.springframework.boot.SpringApplication;\n`
-                applicationJavaContent += `import org.springframework.boot.autoconfigure.SpringBootApplication;\n`
-                applicationJavaContent += `\n`
-                applicationJavaContent += `@SpringBootApplication\n`
-                applicationJavaContent += `public class ${applicationClassName} {\n`
-                applicationJavaContent += `    public static void main(String[] args) {\n`
-                applicationJavaContent += `        SpringApplication.run(${applicationClassName}.class, args);\n`
-                applicationJavaContent += `    }\n`
-                applicationJavaContent += `}`;
-
-                return applicationJavaContent;
-            }
-
-            function getControllerContent(controllerClassName, packageName) {
-                let controllerContent = "";
-                controllerContent += `package ${packageName}.controller;\n`
-                controllerContent += `\n`
-                controllerContent += `import org.springframework.http.ResponseEntity;\n`
-                controllerContent += `import org.springframework.web.bind.annotation.*;\n`
-                controllerContent += `import java.util.Map;\n`
-                controllerContent += `\n`
-                controllerContent += `@RestController\n`
-                controllerContent += `@RequestMapping("")\n`
-                controllerContent += `public class ${controllerClassName} {\n`
-                controllerContent += `    public ResponseEntity<?> create(Map<String, Object> dto) {\n`
-                controllerContent += `        return ResponseEntity.status(201).body("");\n`
-                controllerContent += `    }\n`
-                controllerContent += `}`;
-
-                return controllerContent;
-            }
-
-            function createFile(folder, options) {
-                const { name, assetPath, content, isBinary } = options;
-                if (assetPath) {
-                    readFile(assetPath).then(fileContent => {
-                        folder.file(name, fileContent, { binary: isBinary });
-                    });
-                } else {
-                    folder.file(name, content, { binary: isBinary });
-                }
-            }
-            
-            async function readFile(filePath) {
-                return "";
-                try {
-                    const response = await fetch(filePath);
-                    if (!response.ok) {
-                        throw new Error('파일을 찾을 수 없습니다. 경로를 확인해주세요.');
-                    }
-
-                    return await response.arrayBuffer();
-                } catch (error) {
-                    console.error("❌ 오류 발생:", error);
-                    return null;
-                }
-            }
-        </script> -->
     </body>
 </html>
 

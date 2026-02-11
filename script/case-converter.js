@@ -11,6 +11,10 @@ function toSnakeCase(str) {
         .replace(/^_+|_+$/g, '');
 }
 
+function toScreamSnakeCase(str) {
+    return toSnakeCase(str).toUpperCase();
+}
+
 function toCamelCase(str) {
     return toSnakeCase(str).replace(/_([a-z])/g, (g) => g[1].toUpperCase());
 }

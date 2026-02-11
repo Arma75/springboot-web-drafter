@@ -24,25 +24,43 @@ function generateDtoContent(options, schema) {
     const packageName = options.groupName + "." + options.projectName;
 
     const dtoClassName = getDtoClassName(schema);
+    const dateColumns = getDateColumns(schema);
+    let customColumns = [];
+    schema.columns.map(column => {
+        customColumns.push(column);
+
+        if (dateColumns.includes(column)) {
+            customColumns.push({
+                ...column,
+                name: `${toScreamSnakeCase(column.name)}_START`,
+                comment: `${column.comment} (시작일)`
+            });
+            customColumns.push({
+                ...column,
+                name: `${toScreamSnakeCase(column.name)}_END`,
+                comment: `${column.comment} (종료일)`
+            });
+        }
+    })
 
     let content = "";
     content += `package ${packageName}.dto;\n`
     content += `\n`
-    content += `${getJavaTypeImports(schema.columns).join("\n")}\n`;
+    content += `${getJavaTypeImports(customColumns).join("\n")}\n`;
     content += `\n`
     content += `public class ${dtoClassName} {\n`
-    schema.columns.forEach(column => {
+    customColumns.forEach(column => {
         content += `${getFieldMember(column, 4)}\n`;
-        content += `\n`;
     });
-    schema.columns.forEach(column => {
+    content += `\n`;
+    customColumns.forEach(column => {
         content += `${getGetter(column, 4)}\n`;
-        content += `\n`;
     });
-    schema.columns.forEach(column => {
+    content += `\n`;
+    customColumns.forEach(column => {
         content += `${getSetter(column, 4)}\n`;
-        content += `\n`;
     });
+    content += `\n`;
     content += getDtoToStringMethod(schema, 4);
     content += `}`;
 

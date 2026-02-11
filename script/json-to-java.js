@@ -60,6 +60,10 @@ function getGetter(column, intent = 0) {
 
     return content;
 }
+function getGetterCall(column) {
+    return `get${toPascalCase(column.name)}()`;
+
+}
 function getSetter(column, intent = 0) {
     const javaType = getJavaType(column.type);
     const columnName = toCamelCase(column.name);
@@ -96,9 +100,6 @@ function getJavaTypeImports(columns) {
     return [...new Set(imports)];
 }
 
-function getPrimaryColumns(schema) {
-    return schema.columns.filter(column => column.isPrimaryKey);
-}
 function getPrimaryKeyPath(schema) {
     return getPrimaryColumns(schema).map(column => `{${toCamelCase(column.name)}}`).join("/");
 }
